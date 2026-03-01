@@ -51,7 +51,7 @@ Then run `/setup`. Claude Code handles everything: dependencies, authentication,
 
 **Skills over features.** Instead of adding features (e.g. support for Telegram) to the codebase, contributors submit [claude code skills](https://code.claude.com/docs/en/skills) like `/add-telegram` that transform your fork. You end up with clean code that does exactly what you need.
 
-**Best harness, best model.** NanoClaw runs on the Claude Agent SDK, which means you're running Claude Code directly. Claude Code is highly capable and its coding and problem-solving capabilities allow it to modify and expand NanoClaw and tailor it to each user.
+**Best harness, best model.** NanoClaw runs on the [GitHub Copilot SDK](https://github.com/github/copilot-sdk), with GitHub Copilot or BYOK (Anthropic, OpenAI) as the backend. The harness matters. A bad harness makes even smart models seem dumb, a good harness gives them superpowers.
 
 ## What It Supports
 
@@ -110,7 +110,7 @@ Skills we'd like to see:
 - `/add-signal` - Add Signal as a channel
 
 **Session Management**
-- `/clear` - Add a `/clear` command that compacts the conversation (summarizes context while preserving critical information in the same session). Requires figuring out how to trigger compaction programmatically via the Claude Agent SDK.
+- `/clear` - Add a `/clear` command that compacts the conversation (summarizes context while preserving critical information in the same session). Requires figuring out how to trigger compaction programmatically via the Copilot SDK.
 
 ## Requirements
 
@@ -122,7 +122,7 @@ Skills we'd like to see:
 ## Architecture
 
 ```
-Channels --> SQLite --> Polling loop --> Container (Claude Agent SDK) --> Response
+Channels --> SQLite --> Polling loop --> Container (GitHub Copilot SDK) --> Response
 ```
 
 Single Node.js process. Channels are added via skills and self-register at startup — the orchestrator connects whichever ones have credentials present. Agents execute in isolated Linux containers with filesystem isolation. Only mounted directories are accessible. Per-group message queue with concurrency control. IPC via filesystem.

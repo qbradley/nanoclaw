@@ -69,7 +69,7 @@ The project uses Docker by default (cross-platform). For macOS users who prefer 
 A personal Claude assistant accessible via WhatsApp, with minimal custom code.
 
 **Core components:**
-- **Claude Agent SDK** as the core agent
+- **GitHub Copilot SDK** as the core agent
 - **Containers** for isolated agent execution (Linux VMs)
 - **WhatsApp** as the primary I/O channel
 - **Persistent memory** per conversation and globally
@@ -78,7 +78,7 @@ A personal Claude assistant accessible via WhatsApp, with minimal custom code.
 - **Browser automation** via agent-browser
 
 **Implementation approach:**
-- Use existing tools (WhatsApp connector, Claude Agent SDK, MCP servers)
+- Use existing tools (WhatsApp connector, GitHub Copilot SDK, MCP servers)
 - Minimal glue code
 - File-based systems where possible (CLAUDE.md for memory, folders for groups)
 
@@ -99,7 +99,7 @@ A personal Claude assistant accessible via WhatsApp, with minimal custom code.
 - Agent runs in the group's folder, automatically inherits both CLAUDE.md files
 
 ### Session Management
-- Each group maintains a conversation session (via Claude Agent SDK)
+- Each group maintains a conversation session (via GitHub Copilot SDK)
 - Sessions auto-compact when context gets too long, preserving critical information
 
 ### Container Isolation
@@ -147,11 +147,11 @@ A personal Claude assistant accessible via WhatsApp, with minimal custom code.
 - Tools: `schedule_task`, `list_tasks`, `pause_task`, `resume_task`, `cancel_task`, `send_message`
 - Tasks stored in SQLite with run history
 - Scheduler loop checks for due tasks every minute
-- Tasks execute Claude Agent SDK in containerized group context
+- Tasks execute GitHub Copilot SDK in containerized group context
 
 ### Web Access
 - Built-in WebSearch and WebFetch tools
-- Standard Claude Agent SDK capabilities
+- Standard GitHub Copilot SDK capabilities
 
 ### Browser Automation
 - agent-browser CLI with Chromium in container
