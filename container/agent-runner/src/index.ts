@@ -17,7 +17,7 @@
 import fs from 'fs';
 import path from 'path';
 import { CopilotClient } from '@github/copilot-sdk';
-import type { CopilotSession } from '@github/copilot-sdk';
+import type { CopilotSession, SessionConfig, ProviderConfig } from '@github/copilot-sdk';
 import { fileURLToPath } from 'url';
 
 interface ContainerInput {
@@ -222,22 +222,25 @@ function buildSessionConfig(
   }
 
   // Detect BYOK provider from environment
-  let provider: { type: string; baseUrl: string; apiKey?: string } | undefined;
+  let provider: ProviderConfig | undefined;
+  let model: string | undefined;
   if (process.env.ANTHROPIC_API_KEY && !process.env.GITHUB_TOKEN && !process.env.COPILOT_GITHUB_TOKEN && !process.env.GH_TOKEN) {
     provider = {
       type: 'anthropic',
       baseUrl: 'https://api.anthropic.com',
       apiKey: process.env.ANTHROPIC_API_KEY,
     };
+    model = 'claude-sonnet-4-20250514';
   } else if (process.env.OPENAI_API_KEY && !process.env.GITHUB_TOKEN && !process.env.COPILOT_GITHUB_TOKEN && !process.env.GH_TOKEN) {
     provider = {
       type: 'openai',
       baseUrl: 'https://api.openai.com/v1',
       apiKey: process.env.OPENAI_API_KEY,
     };
+    model = 'gpt-4.1';
   }
 
-  const config: Record<string, unknown> = {
+  const config: SessionConfig = {
     workingDirectory: '/workspace/group',
     systemMessage: globalClaudeMd ? { content: globalClaudeMd } : undefined,
     mcpServers: {
@@ -259,8 +262,7 @@ function buildSessionConfig(
 
   if (provider) {
     config.provider = provider;
-    // BYOK requires explicit model
-    config.model = provider.type === 'anthropic' ? 'claude-sonnet-4-20250514' : 'gpt-4.1';
+    config.model = model;
   }
 
   return config;
@@ -387,9 +389,6 @@ async function main(): Promise<void> {
         log('Close sentinel consumed during query, exiting');
         break;
       }
-
-      // Emit session update so host can track it
-      writeOutput({ status: 'success', result: null, newSessionId });
 
       log('Query ended, waiting for next IPC message...');
 
