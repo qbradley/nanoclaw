@@ -35,7 +35,7 @@ The agent-runner uses `CopilotClient` and `CopilotSession` from `@github/copilot
 ## Phase Status
 
 - [x] **Phase 1: Container Dependencies & Dockerfile** — Update base image to Node 24, swap SDK packages, remove claude-code
-- [ ] **Phase 2: Agent Runner Rewrite** — Replace query() with CopilotClient/CopilotSession, map all options
+- [x] **Phase 2: Agent Runner Rewrite** — Replace query() with CopilotClient/CopilotSession, map all options
 - [ ] **Phase 3: Host-Side Configuration** — Update env var filtering, session directory, settings
 - [ ] **Phase 4: Documentation** — Technical reference and project doc updates
 
