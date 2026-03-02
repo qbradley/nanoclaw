@@ -64,7 +64,7 @@ function buildVolumeMounts(
 
   if (isMain) {
     // Main gets the project root read-only. Writable paths the agent needs
-    // (group folder, IPC, .claude/) are mounted separately below.
+    // (group folder, IPC, .copilot/) are mounted separately below.
     // Read-only prevents the agent from modifying host application code
     // (src/, dist/, package.json, etc.) which would bypass the sandbox
     // entirely on next restart.

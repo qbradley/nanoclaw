@@ -27,6 +27,8 @@ interface ContainerInput {
   chatJid: string;
   isMain: boolean;
   isScheduledTask?: boolean;
+  assistantName?: string;
+  secrets?: Record<string, string>;
 }
 
 interface ContainerOutput {
@@ -67,7 +69,7 @@ function log(message: string): void {
  * Archive conversation messages to conversations/ directory.
  * Called when session ends or compacts.
  */
-async function archiveConversation(session: CopilotSession): Promise<void> {
+async function archiveConversation(session: CopilotSession, assistantName?: string): Promise<void> {
   try {
     const events = await session.getMessages();
     const messages: ParsedMessage[] = [];
@@ -93,7 +95,7 @@ async function archiveConversation(session: CopilotSession): Promise<void> {
     const filename = `${date}-${name}.md`;
     const filePath = path.join(conversationsDir, filename);
 
-    const markdown = formatTranscriptMarkdown(messages);
+    const markdown = formatTranscriptMarkdown(messages, undefined, assistantName);
     fs.writeFileSync(filePath, markdown);
 
     log(`Archived conversation to ${filePath}`);
@@ -112,7 +114,7 @@ interface ParsedMessage {
   content: string;
 }
 
-function formatTranscriptMarkdown(messages: ParsedMessage[], title?: string | null): string {
+function formatTranscriptMarkdown(messages: ParsedMessage[], title?: string | null, assistantName?: string): string {
   const now = new Date();
   const formatDateTime = (d: Date) => d.toLocaleString('en-US', {
     month: 'short',
@@ -131,7 +133,7 @@ function formatTranscriptMarkdown(messages: ParsedMessage[], title?: string | nu
   lines.push('');
 
   for (const msg of messages) {
-    const sender = msg.role === 'user' ? 'User' : 'Andy';
+    const sender = msg.role === 'user' ? 'User' : (assistantName || 'Assistant');
     const content = msg.content.length > 2000
       ? msg.content.slice(0, 2000) + '...'
       : msg.content;
@@ -240,9 +242,25 @@ function buildSessionConfig(
     model = 'gpt-4.1';
   }
 
+  // Discover additional directories mounted at /workspace/extra/*
+  const extraDirs: string[] = [];
+  const extraBase = '/workspace/extra';
+  if (fs.existsSync(extraBase)) {
+    for (const entry of fs.readdirSync(extraBase)) {
+      const fullPath = path.join(extraBase, entry);
+      if (fs.statSync(fullPath).isDirectory()) {
+        extraDirs.push(fullPath);
+      }
+    }
+  }
+  if (extraDirs.length > 0) {
+    log(`Additional directories: ${extraDirs.join(', ')}`);
+  }
+
   const config: SessionConfig = {
     workingDirectory: '/workspace/group',
     systemMessage: globalClaudeMd ? { content: globalClaudeMd } : undefined,
+    skillDirectories: extraDirs.length > 0 ? extraDirs : undefined,
     mcpServers: {
       nanoclaw: {
         type: 'local',
@@ -289,6 +307,8 @@ async function main(): Promise<void> {
   try {
     const stdinData = await readStdin();
     containerInput = JSON.parse(stdinData);
+    // Delete the temp file the entrypoint wrote — it contains secrets
+    try { fs.unlinkSync('/tmp/input.json'); } catch { /* may not exist */ }
     log(`Received input for group: ${containerInput.groupFolder}`);
   } catch (err) {
     writeOutput({
@@ -297,6 +317,14 @@ async function main(): Promise<void> {
       error: `Failed to parse input: ${err instanceof Error ? err.message : String(err)}`
     });
     process.exit(1);
+  }
+
+  // Apply secrets to environment for SDK auth (never exposed to subprocesses)
+  if (containerInput.secrets) {
+    for (const [key, value] of Object.entries(containerInput.secrets)) {
+      process.env[key] = value;
+    }
+    delete containerInput.secrets;
   }
 
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -404,7 +432,7 @@ async function main(): Promise<void> {
     }
 
     // Archive conversation before cleanup
-    await archiveConversation(session);
+    await archiveConversation(session, containerInput.assistantName);
 
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
