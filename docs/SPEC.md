@@ -78,7 +78,7 @@ A personal Claude assistant with multi-channel support, persistent memory per co
 | Channel System | Channel registry (`src/channels/registry.ts`) | Channels self-register at startup |
 | Message Storage | SQLite (better-sqlite3) | Store messages for polling |
 | Container Runtime | Containers (Linux VMs) | Isolated environments for agent execution |
-| Agent | @anthropic-ai/claude-agent-sdk (0.2.29) | Run Claude with tools and MCP servers |
+| Agent | @github/copilot-sdk | Run Copilot agent with tools and MCP servers |
 | Browser Automation | agent-browser + Chromium | Web interaction and screenshots |
 | Runtime | Node.js 20+ | Host process for routing and scheduling |
 
@@ -382,22 +382,26 @@ Additional mounts appear at `/workspace/extra/{containerPath}` inside the contai
 
 **Mount syntax note:** Read-write mounts use `-v host:container`, but readonly mounts require `--mount "type=bind,source=...,target=...,readonly"` (the `:ro` suffix may not work on all runtimes).
 
-### Claude Authentication
+### Agent Authentication
 
-Configure authentication in a `.env` file in the project root. Two options:
+Configure authentication in a `.env` file in the project root. Three options:
 
-**Option 1: Claude Subscription (OAuth token)**
+**Option 1: GitHub Copilot (Recommended)**
 ```bash
-CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
+GITHUB_TOKEN=ghp_...
 ```
-The token can be extracted from `~/.claude/.credentials.json` if you're logged in to Claude Code.
 
-**Option 2: Pay-per-use API Key**
+**Option 2: Anthropic API Key (BYOK)**
 ```bash
 ANTHROPIC_API_KEY=sk-ant-api03-...
 ```
 
-Only the authentication variables (`CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_API_KEY`) are extracted from `.env` and written to `data/env/env`, then mounted into the container at `/workspace/env-dir/env` and sourced by the entrypoint script. This ensures other environment variables in `.env` are not exposed to the agent. This workaround is needed because some container runtimes lose `-e` environment variables when using `-i` (interactive mode with piped stdin).
+**Option 3: OpenAI API Key (BYOK)**
+```bash
+OPENAI_API_KEY=sk-...
+```
+
+Only the authentication variables (`GITHUB_TOKEN`, `COPILOT_GITHUB_TOKEN`, `GH_TOKEN`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`) are read from `.env` and passed to the container via stdin JSON. This ensures other environment variables are not exposed to the agent.
 
 ### Changing the Assistant Name
 
@@ -436,7 +440,7 @@ NanoClaw uses a hierarchical memory system based on CLAUDE.md files.
 
 1. **Agent Context Loading**
    - Agent runs with `cwd` set to `groups/{group-name}/`
-   - Claude Agent SDK with `settingSources: ['project']` automatically loads:
+   - Copilot SDK with `workingDirectory` set to the group folder and `systemMessage` loads:
      - `../CLAUDE.md` (parent directory = global memory)
      - `./CLAUDE.md` (current directory = group memory)
 
@@ -455,12 +459,12 @@ NanoClaw uses a hierarchical memory system based on CLAUDE.md files.
 
 ## Session Management
 
-Sessions enable conversation continuity - Claude remembers what you talked about.
+Sessions enable conversation continuity - the agent remembers what you talked about.
 
 ### How Sessions Work
 
 1. Each group has a session ID stored in SQLite (`sessions` table, keyed by `group_folder`)
-2. Session ID is passed to Claude Agent SDK's `resume` option
+2. Session ID is passed to Copilot SDK's `resumeSession()` method
 3. Claude continues the conversation with full context
 4. Session transcripts are stored as JSONL files in `data/sessions/{group}/.claude/`
 
@@ -494,7 +498,7 @@ Sessions enable conversation continuity - Claude remembers what you talked about
    └── Build prompt with full conversation context
    │
    ▼
-7. Router invokes Claude Agent SDK:
+7. Router invokes Copilot SDK:
    ├── cwd: groups/{group-name}/
    ├── prompt: conversation history + current message
    ├── resume: session_id (for continuity)

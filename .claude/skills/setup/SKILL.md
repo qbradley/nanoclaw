@@ -73,15 +73,17 @@ Run `npx tsx setup/index.ts --step container -- --runtime <chosen>` and parse th
 
 **If TEST_OK=false but BUILD_OK=true:** The image built but won't run. Check logs — common cause is runtime not fully started. Wait a moment and retry the test.
 
-## 4. Claude Authentication (No Script)
+## 4. Agent Authentication (No Script)
 
-If HAS_ENV=true from step 2, read `.env` and check for `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY`. If present, confirm with user: keep or reconfigure?
+If HAS_ENV=true from step 2, read `.env` and check for `GITHUB_TOKEN`, `ANTHROPIC_API_KEY`, or `OPENAI_API_KEY`. If present, confirm with user: keep or reconfigure?
 
-AskUserQuestion: Claude subscription (Pro/Max) vs Anthropic API key?
+AskUserQuestion: GitHub Copilot (Recommended) vs Anthropic API key (BYOK) vs OpenAI API key (BYOK)?
 
-**Subscription:** Tell user to run `claude setup-token` in another terminal, copy the token, add `CLAUDE_CODE_OAUTH_TOKEN=<token>` to `.env`. Do NOT collect the token in chat.
+**GitHub Copilot:** Tell user to create a GitHub personal access token with `copilot` scope at https://github.com/settings/tokens, then add `GITHUB_TOKEN=<token>` to `.env`. Do NOT collect the token in chat.
 
-**API key:** Tell user to add `ANTHROPIC_API_KEY=<key>` to `.env`.
+**Anthropic API key:** Tell user to add `ANTHROPIC_API_KEY=<key>` to `.env`.
+
+**OpenAI API key:** Tell user to add `OPENAI_API_KEY=<key>` to `.env`.
 
 ## 5. Set Up Channels
 

@@ -68,12 +68,12 @@ Add `PARALLEL_API_KEY` to allowed environment variables in `src/container-runner
 
 Find the line:
 ```typescript
-const allowedVars = ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY'];
+const allowedVars = ['GITHUB_TOKEN', 'COPILOT_GITHUB_TOKEN', 'GH_TOKEN', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY'];
 ```
 
 Replace with:
 ```typescript
-const allowedVars = ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY', 'PARALLEL_API_KEY'];
+const allowedVars = ['GITHUB_TOKEN', 'COPILOT_GITHUB_TOKEN', 'GH_TOKEN', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'PARALLEL_API_KEY'];
 ```
 
 ### 4. Configure MCP Servers in Agent Runner
