@@ -17,7 +17,7 @@
 import fs from 'fs';
 import path from 'path';
 import { CopilotClient } from '@github/copilot-sdk';
-import type { CopilotSession, SessionConfig, ProviderConfig } from '@github/copilot-sdk';
+import type { CopilotSession, SessionConfig } from '@github/copilot-sdk';
 import { fileURLToPath } from 'url';
 
 interface ContainerInput {
@@ -224,7 +224,7 @@ function buildSessionConfig(
   }
 
   // Detect BYOK provider from environment
-  let provider: ProviderConfig | undefined;
+  let provider: SessionConfig['provider'];
   let model: string | undefined;
   if (process.env.ANTHROPIC_API_KEY && !process.env.GITHUB_TOKEN && !process.env.COPILOT_GITHUB_TOKEN && !process.env.GH_TOKEN) {
     provider = {
